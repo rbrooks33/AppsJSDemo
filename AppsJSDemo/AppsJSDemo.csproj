@@ -77,9 +77,15 @@
     <Content Include="Scripts\Apps\Components\Debug\debug.css" />
     <Content Include="Scripts\Apps\Components\Debug\debug.html" />
     <Content Include="Scripts\Apps\Components\Debug\debug.js" />
+    <Content Include="Scripts\Apps\Components\Login\Images\22.gif" />
+    <Content Include="Scripts\Apps\Components\Login\Images\delegate.jpg" />
+    <Content Include="Scripts\Apps\Components\Login\Images\logo.png" />
+    <Content Include="Scripts\Apps\Components\Login\Images\logo_with_title.png" />
     <Content Include="Scripts\Apps\Components\Login\Login.css" />
     <Content Include="Scripts\Apps\Components\Login\Login.html" />
     <Content Include="Scripts\Apps\Components\Login\Login.js" />
+    <Content Include="Scripts\Apps\index.html" />
+    <Content Include="Scripts\Apps\jquery.js" />
     <Content Include="Scripts\Apps\Resources\bootstrap4.min.css" />
     <Content Include="Scripts\Apps\Resources\bootstrap4withpopper.js" />
     <Content Include="Scripts\Apps\Resources\defaultGridStyle.css" />
