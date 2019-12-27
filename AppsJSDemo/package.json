@@ -1,0 +1,38 @@
+{
+  "name": "appsjs",
+  "version": "2.0.2",
+  "description": "Angular-like components without, er, Angular.",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "files":[
+    "C:\\Local\\Work\\Brooksoft\\AppsJS\\AppsJSDemo\\AppsJSDemo\\Scripts\\Apps\\*.*",
+    "C:\\Local\\Work\\Brooksoft\\AppsJS\\AppsJSDemo\\AppsJSDemo\\Scripts\\Apps\\_AppsIgnore\\*.*",
+    "C:\\Local\\Work\\Brooksoft\\AppsJS\\AppsJSDemo\\AppsJSDemo\\Scripts\\Apps\\_AppsIgnore\\CLI\\*.*",
+    "C:\\Local\\Work\\Brooksoft\\AppsJS\\AppsJSDemo\\AppsJSDemo\\Scripts\\Apps\\_AppsIgnore\\Templates\\*.*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rbrooks33/AppsJSDemo.git"
+  },
+  "keywords": [
+    "javascript",
+    "angular",
+    "css",
+    "html",
+    "component",
+    "front-end",
+    "import",
+    "es5",
+    "es6",
+    "require",
+    "amd"
+  ],
+  "author": "Rodney Brooks",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rbrooks33/AppsJSDemo/issues"
+  },
+  "homepage": "https://github.com/rbrooks33/AppsJSDemo#readme"
+}

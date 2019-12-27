@@ -162,6 +162,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="libman.json" />
     <None Include="packages.config" />
     <Content Include="Scripts\Apps\AppsDeployments.json" />
     <Content Include="Scripts\Apps\Components\components.json" />
