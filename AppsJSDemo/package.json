@@ -1,16 +1,21 @@
 {
   "name": "appsjs",
-  "version": "2.0.2",
+  "version": "2.0.10",
   "description": "Angular-like components without, er, Angular.",
-  "main": "index.html",
+  "main": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files":[
-    "C:\\Local\\Work\\Brooksoft\\AppsJS\\AppsJSDemo\\AppsJSDemo\\Scripts\\Apps\\*.*",
-    "C:\\Local\\Work\\Brooksoft\\AppsJS\\AppsJSDemo\\AppsJSDemo\\Scripts\\Apps\\_AppsIgnore\\*.*",
-    "C:\\Local\\Work\\Brooksoft\\AppsJS\\AppsJSDemo\\AppsJSDemo\\Scripts\\Apps\\_AppsIgnore\\CLI\\*.*",
-    "C:\\Local\\Work\\Brooksoft\\AppsJS\\AppsJSDemo\\AppsJSDemo\\Scripts\\Apps\\_AppsIgnore\\Templates\\*.*"
+    "Scripts/Apps/*.*",
+    "Scripts/Apps/_AppsIgnore/*.*",
+    "Scripts/Apps/_AppsIgnore/CLI/*.*",
+    "Scripts/Apps/_AppsIgnore/Templates/*.*",
+    "Scripts/Apps/Components/*.*",
+    "Scripts/Apps/Components/Debug/*.*",
+    "Scripts/Apps/Components/Login/*.*",
+    "Scripts/Apps/Components/Login/Images/*.*",
+    "Scripts/Apps/Resources/*.*"
   ],
   "repository": {
     "type": "git",

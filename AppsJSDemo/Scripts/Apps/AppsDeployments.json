@@ -6,10 +6,7 @@
     "VirtualFolder": "",
     "Port": "44372",
     "AppsRoot": "Scripts/Apps",
-    "Debug": false,
-    "Required": "jquery, require, linq, bootstrap4, blockui, dialogs, grids, jqte, notify, binder",
-    "UseServer": false,
-    "MinimumJavaScriptVersion": "es5"
+    "Debug": false
   },
   "Prod": {
     "Active": false,
@@ -18,9 +15,6 @@
     "VirtualFolder": "",
     "Port": "",
     "AppsRoot": "Scripts/Apps",
-    "Debug": true,
-    "Required": "jquery, require, linq, bootstrap4, blockui, dialogs, grids, jqte, notify, binder",
-    "UseServer": false,
-    "MinimumJavaScriptVersion": "es5"
+    "Debug": false
   }
 }

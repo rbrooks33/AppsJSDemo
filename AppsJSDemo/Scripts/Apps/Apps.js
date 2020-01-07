@@ -3,7 +3,7 @@
     UI: [],
     PreInit: function () {
 
-        Apps.Download('/Scripts/Apps/AppsDeployments.json', function (response) {
+        Apps.Download('AppsDeployments.json', function (response) {
             let deployments = JSON.parse(response);
             Object.values(deployments).some(function (d, index) {
                 if (d.Active) {
@@ -192,7 +192,7 @@
 
         if (!Apps.Settings.UseServer) {
 
-            console.log('loading components: manual mode');
+            console.log('loading components: auto mode');
 
             Apps.Download(Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Components/components.json', function (response) {
 
@@ -206,12 +206,13 @@
     },
     LoadComponents: function (parentComponent, components, componentsFolder) {
 
-        components.forEach(function (c, index) {
+        Apps.CountDownComponents.count++;
 
-            console.log('loading component: ' + c.Name + ' (via ' + c.ModuleType + ')');
+        components.forEach(function (c, index) {
 
             //if (c.Load && c.ModuleType === 'es6') {
 
+            //    console.log('loading component: ' + c.Name + ' (via ' + c.ModuleType + ')');
             //    Apps.CountDownComponents.count++;
             //    import(componentUrl).then((cObj) => {
             //        Apps.LoadComponent(parentComponent, cObj, c);
@@ -220,6 +221,8 @@
             //    });
             //}
             if (c.Load && c.ModuleType === 'require') {
+
+                console.log('loading component: ' + c.Name + ' (via ' + c.ModuleType + ')');
 
                 Apps.CountDownComponents.count++;
                 require([componentsFolder + '/' + c.Name + '/' + c.Name + '.js?version=' + Apps.ActiveDeployment.Version], function (cObj) {
@@ -230,7 +233,7 @@
             }
 
         });
-
+        Apps.CountDownComponents.check();
     },
     LoadComponent: function (parentComponent, c, config) {
 

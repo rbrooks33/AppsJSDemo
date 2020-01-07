@@ -26,7 +26,7 @@
     {
       "Name": "Login",
       "Description": "Encompasses all UI and logic for authentication and authorization.",
-      "Load": true,
+      "Load": false,
       "Initialize": true,
       "Color": "blue",
       "ModuleType": "require",
