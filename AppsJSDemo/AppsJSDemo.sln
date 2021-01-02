@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppsJSDemo", "AppsJSDemo.csproj", "{CB921BEA-F638-49D9-998B-5F803542B4D8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppsCLI", "..\..\AppsJSCLI\AppsCLI.csproj", "{BDEB617F-CAA1-4FBC-8FE8-DE181062C192}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{CB921BEA-F638-49D9-998B-5F803542B4D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB921BEA-F638-49D9-998B-5F803542B4D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB921BEA-F638-49D9-998B-5F803542B4D8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BDEB617F-CAA1-4FBC-8FE8-DE181062C192}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BDEB617F-CAA1-4FBC-8FE8-DE181062C192}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BDEB617F-CAA1-4FBC-8FE8-DE181062C192}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BDEB617F-CAA1-4FBC-8FE8-DE181062C192}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

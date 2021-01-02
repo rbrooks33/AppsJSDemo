@@ -1,0 +1,19 @@
+﻿
+<div class="loginstuffmargin">
+    This is content that automatically drops to DOM on "Apps.UI.[ComponentName].Drop();"
+</div>
+
+<script id="Main_Login_LoginPrompt_Template" type="text/template">
+    <!--
+        0 = greeting
+        1 = login button text
+    -->
+    <div class="loginstuffmargin">
+        <h1>{0}</h1>
+        <h3>Username</h3>
+        <input type="text" id="username" class="form-control" />
+        <h3>Password</h3>
+        <input type="text" id="username" class="form-control" />
+        <div class="btn btn-secondary" style="margin-top:5px;" onclick="Apps.Components.Main.Login.LogMeIn();">{1}</div>
+    </div>
+</script>

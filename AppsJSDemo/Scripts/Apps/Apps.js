@@ -1,36 +1,134 @@
 ﻿window.Apps = {
     Components: [],
     UI: [],
+    LocalComponentsReady: function () {
+        $ = jQuery.noConflict(true); //Allows legacy jquery to continue to be used
+
+    },
     PreInit: function () {
 
-        Apps.Download('AppsDeployments.json', function (response) {
-            let deployments = JSON.parse(response);
-            Object.values(deployments).some(function (d, index) {
-                if (d.Active) {
-                    Apps['ActiveDeployment'] = d;
-                    return true;
-                }
-            });
-            if (Apps.ActiveDeployment) {
-                console.log('active deployment loaded');
-                Apps.LoadDeployment();
-            }
+        Apps.SetPolyfills();
+
+        Apps['ActiveDeployment'] = {
+            "Active": true,
+            "Version": new Date().getDate(),
+            "WebRoot": location.protocol + "//" + location.hostname,
+            "VirtualFolder": "",
+            "Port": location.port,
+            "AppsRoot": "Scripts/Apps",
+            "Debug": false,
+            "Test": false,
+            "Authenticated": false,
+            "AgencyID": null
+        };
+
+        //if (location.pathname.toLowerCase().indexOf('default.aspx') > 0) {
+        //    Apps.LoadDeployment(function () {
+        //        if (Apps.Settings.Debug)
+        //            console.log('active deployment loaded (no auth)');
+        //    });
+
+        //}
+        //else {
+        //    Apps.Authenticate(function () {
+        //    });
+        //}
+                Apps.LoadDeployment(function () {
+                    if (Apps.Settings.Debug)
+                        console.log('active deployment loaded (with auth)');
+                });
+    },
+    Test: function () {
+        if (Apps.ActiveDeployment.Test) {
+            if (Apps.Components.Testing)
+                Apps.Components.Testing.Test(arguments);
+        }
+    },
+    LoadUtil: function (callback) {
+        require([Apps.Settings.WebRoot + '/Scripts/Apps/Resources/util.js'], function (util) {
+            Apps.Util = util;
+            callback();
+        });
+
+    },
+    Authenticate: function (callback) {
+
+        let webRoot = Apps.ActiveDeployment.WebRoot;
+        let port = Apps.ActiveDeployment.Port.length > 0 ? ':' + Apps.ActiveDeployment.Port : '';
+        let virtualFolder = Apps.ActiveDeployment.VirtualFolder.length > 0 ? '/' + Apps.ActiveDeployment.VirtualFolder : '';
+        let hostUrl = webRoot + port + virtualFolder;
+
+        Apps.WebServiceXML(hostUrl + '/api/admin/Authenticate', function (resultString) {
+
+            let result = JSON.parse(resultString);
+            let authenticationData = result.Data; //Type of Models.Common.AuthenticationData
+
+            sessionStorage.setItem('AuthenticationData', JSON.stringify(authenticationData));
+
+            Apps.ActiveDeployment.Debug = result.Data.Debug;
+            Apps.ActiveDeployment.Version = result.Data.Version;
+            Apps.Features = authenticationData.Features; //Checked in Controls
+
+            if (callback)
+                callback(authenticationData);
         });
     },
-    LoadDeployment: function () {
+    GetAuthenticationData: function () {
+        return JSON.parse(sessionStorage.getItem('AuthenticationData'));
+    },
+    LoadDeployment: function (callback) {
         Apps.LoadSettings();
+
+        if (Apps.Ready)
+            Apps.Ready();
+
+
         Apps.LoadResources(function () {
 
-            console.log('all resources loaded');
+            if (Apps.Settings.Debug)
+                console.log('all resources loaded');
 
             Apps.LoadComponentsConfig(function () {
 
-                console.log('components config loaded');
+                if (Apps.Settings.Debug)
+                    console.log('components config loaded');
+
+                ////Set up error dialog
+                Apps.Components.Common.Dialogs.Register('AppsErrorDialog', {
+                    title: 'Exception',
+                    size: 'full-width',
+                    templateid: 'templateMyDialog1',
+                    saveclick: function (id) {
+                        Apps.Dialogs.Close('AppsErrorDialog');
+                    },
+                    cancelclick: function (id) {
+                        Apps.Dialogs.Close('AppsErrorDialog');
+                    }
+                });
+                if (callback)
+                    callback()
+
             });
         });
     },
-    LoadSettings() {
+    ApplyStringSearchAndReplaceExtension: function () {
+
+        String.prototype.SearchAndReplace = function () {
+            var args = arguments;
+            return this.replace(/{(\d+)}/g, function (match, number) {
+                return typeof args[number] !== 'undefined'
+                    ? args[number]
+                    : match
+                    ;
+            });
+        };
+    },
+    LoadSettings: function () {
+
+        Apps.ApplyStringSearchAndReplaceExtension();
+
         let deployment = Apps.ActiveDeployment;
+
         Apps['Settings'] = {};
         Apps.Settings["Version"] = deployment.Version;
         Apps.Settings['WebRoot'] = deployment.WebRoot;
@@ -41,72 +139,113 @@
         Apps.Settings['Required'] = deployment.Required;
         Apps.Settings['UseServer'] = deployment.UseServer;
         Apps.Settings.WebRoot = Apps.Settings.WebRoot + (deployment.Port.length > 0 ? ':' : '') + Apps.Settings.Port + Apps.Settings.VirtualFolder;
-        console.log('deployment settings applied');
+        if (Apps.Settings.Debug)
+            console.log('deployment settings applied');
     },
     LoadResources: function (callback) {
 
-        Apps.Download(Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Resources/resources.json', function (response) {
+        Apps.Download(Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Resources/resources.js?version=' + Apps.Settings.Version, function (response) {
 
             Apps.Resources = JSON.parse(response);
 
-            let scriptResources = [];
-            let nonScriptResources = [];
-            let resourceArray = Object.values(Apps.Resources);
+            var scriptResources = [];
+            var nonScriptResources = [];
+            var resourceArray = Apps.Resources.Resources; //Object.values(Apps.Resources.Resources);
 
             for (let x = 0; x < resourceArray.length; x++) {
-                if (resourceArray[x].ModuleType === 'script')
-                    scriptResources.push(resourceArray[x]);
-                else
-                    nonScriptResources.push(resourceArray[x]);
+                if (resourceArray[x].Enabled) {
+                    if (resourceArray[x].ModuleType === 'script')
+                        scriptResources.push(resourceArray[x]);
+                    else
+                        nonScriptResources.push(resourceArray[x]);
+                }
             }
 
-            console.log('resources loading begin');
+
+            if (Apps.Settings.Debug)
+                console.log('resources loading begin');
 
             Apps.LoadScriptResources(scriptResources, function () {
 
-                console.log('script resources loaded');
+                ///var allNonScriptResources = nonScriptResources;
+                Apps.LoadUtil(function () { //After require, before components. non-optimal
+                    //Apps.LoadResizer(function () {
 
-                Apps.LoadNonScriptResources(nonScriptResources, function () {
+                    if (Apps.Settings.Debug)
+                        console.log('script resources loaded');
 
-                    console.log('non-script resources loaded');
-                    if (callback)
-                        callback();
+                    let styleResources = nonScriptResources.filter(function (ns) {
+                        return ns.ModuleType === 'style';
+                    });
+
+                    Apps.LoadStyleResources(styleResources);
+
+                    let nonStyleResources = nonScriptResources.filter(function (ns) {
+                        return ns.ModuleType !== 'style';
+                    });
+
+                    if (nonStyleResources.length > 0) {
+                        Apps.LoadNonScriptResources(nonStyleResources, function () {
+
+                            if (Apps.Settings.Debug)
+                                console.log('non-script resources loaded');
+                            if (callback)
+                                callback();
+                        });
+                    }
+                    else {
+                        if (callback)
+                            callback();
+                    }
                 });
+                //});
             });
         });
     },
+
     LoadScriptResources: function (scriptResources, callback) {
 
         //Earlier doing by order but order doesn't mean anything when 
         //all is asynx :)
-        let orderedResources = Object.values(scriptResources).sort(function (a, b) {
-            return a.Order - b.Order;
-        });
+        //let orderedResources = Object.values(scriptResources).sort(function (a, b) {
+        //    return a.Order - b.Order;
+        //});
+
+        //let orderedResources = Apps.Values(scriptResources);
 
         //Instead, pick some to "LoadFirst", order them and load sync and in order
-        let loadFirst = orderedResources.filter(function (r) {
-            return r.LoadFirst === true;
+        let loadFirst = Apps.Filter(scriptResources, function (item, index, fullArray) {
+            return item.LoadFirst === true;
         });
 
-        loadFirst.forEach(function (r, index) {
-            r.Done = false;
-        });
+        //loadFirst.forEach(function (r, index) {
+        //    r.Done = false;
+        //});
 
-        let loadNext = orderedResources.filter(function (r) {
-            return r.LoadFirst === false;
+        for (var firstIndex = 0; firstIndex < loadFirst.length; firstIndex++) {
+            loadFirst[firstIndex].Done = false;
+        }
+
+        //let loadNext = orderedResources.filter(function (r) {
+        //    return r.LoadFirst === false;
+        //});
+
+        let loadNext = Apps.Filter(scriptResources, function (item, index, fullArray) {
+            return item.LoadFirst === false;
         });
 
         Apps.LoadFirstScripts(loadFirst, function () {
 
-            Object.values(loadNext).forEach(function (r, index) {
+            loadNext.forEach(function (r, index) {
 
                 let resourcesFolder = Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Resources';
 
                 Apps.CountDownScriptResources.count++;
 
-                Apps.LoadScript(resourcesFolder + '/' + r.FileName, function () {
+                Apps.LoadScript(resourcesFolder + '/' + r.FileName + '?version=' + Apps.Settings.Version, function () {
 
-                    console.log('Script: loading next ' + r.FileName);
+                    if (Apps.Settings.Debug)
+                        console.log('Script: loading next ' + r.FileName);
 
                     Apps.CountDownScriptResources.check();
 
@@ -115,6 +254,24 @@
         });
         Apps.ScriptResourcesReady = callback;
 
+    },
+    Values: function (obj) {
+        //var obj = { foo: 'bar', baz: 42 };
+        var result = null;
+        var values = Object.keys(obj).map(function (e) {
+            result = obj[e]; //return obj[e]
+        });
+        return result;
+    },
+    Filter: function (myArray, callBack) {
+        let newArray = [];
+        for (let i = 0; i < myArray.length; i++) {
+            let result = callBack(myArray[i], i, myArray);
+            if (result) {
+                newArray.push(myArray[i]);
+            }
+        }
+        return newArray;
     },
     LoadFirstScripts: function (loadFirsts, callback) {
         //Get first (if any) that have not been loaded
@@ -128,9 +285,10 @@
 
             let resourcesFolder = Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Resources';
             let fileName = notDone[0].FileName;
-            Apps.LoadScript(resourcesFolder + '/' + fileName, function () {
+            Apps.LoadScript(resourcesFolder + '/' + fileName + '?version=' + Apps.Settings.Version, function () {
 
-                console.log('Script: loading first ' + fileName);
+                if (Apps.Settings.Debug)
+                    console.log('Script: loading first ' + fileName);
                 Apps.LoadFirstScripts(loadFirsts, callback);
             });
 
@@ -139,52 +297,77 @@
             if (callback)
                 callback();
     },
+    LoadStyleResources: function (styleResources) {
+
+        var resourcesFolder = Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Resources';
+        //Style loads sync, do first
+        styleResources.forEach(function (s, index) {
+            if (Apps.Settings.Debug)
+                console.debug('Loading style ' + s.Name);
+            Apps.LoadStyle(resourcesFolder + '/' + s.FileName + '?version=' + Apps.Settings.Version);
+        });
+        if (Apps.Settings.Debug)
+            console.debug("All styles loaded.");
+    },
     LoadNonScriptResources: function (nonScriptResources, callback) {
 
-        let orderedResources = Object.values(nonScriptResources).sort(function (a, b) {
+        var resourcesFolder = Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Resources';
+
+        Apps.NonScriptResourcesReady = callback;
+
+        let orderedResources = nonScriptResources.sort(function (a, b) {
             return a.Order - b.Order;
         });
 
-        Object.values(orderedResources).forEach(function (r, index) {
+        orderedResources.forEach(function (r, index) {
 
-            let resourcesFolder = Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Resources';
+            if (Apps.Settings.Debug)
+                console.log('Non-Script: loading ' + r.FileName + ' (via ' + r.ModuleType + ')');
 
-            console.log('Non-Script: loading ' + r.FileName + ' (via ' + r.ModuleType + ')');
+            if (r.Enabled) {
+                if (r.ModuleType === 'require') {
+                    Apps.CountDownNonScriptResources.count++;
+                    require([resourcesFolder + '/' + r.FileName + '?version=' + Apps.Settings.Version], function (resource) {
 
-            if (r.ModuleType === 'require') {
-                Apps.CountDownResources.count++;
-                require([resourcesFolder + '/' + r.FileName], function (resource) {
-                    Apps.CountDownResources.check();
-                });
-            }
-            //else if (r.ModuleType === 'import') {
-            //    Apps.CountDownResources.count++;
-            //    import(resourcesFolder + '/' + r.FileName)
-            //        .then((resource) => {
-            //            Apps.CountDownResources.check();
-            //        });
-            //}
-            else if (r.ModuleType === 'require') {
-                Apps.CountDownResources.count++;
-                require([resourcesFolder + '/' + r.FileName], function (obj) {
-                    Apps.CountDownResources.check();
-                });
-            }
-            else if (r.ModuleType === 'script') {
-                Apps.CountDownResources.count++;
-                Apps.LoadScript(resourcesFolder + '/' + r.FileName, function () {
-                    Apps.CountDownResources.check();
-                });
-            }
-            else if (r.ModuleType === 'style') {
-                Apps.CountDownResources.count++;
-                Apps.LoadStyle(resourcesFolder + '/' + r.FileName, function () {
-                    Apps.CountDownResources.check();
-                });
+                        if (r.ModuleName) {
+                            Apps[r.ModuleName] = resource;
+
+                            if (r.ModuleName === 'JQTE')
+                                Apps.JQTE = $.fn.jqte; //Don't try this at home
+                        }
+
+                        Apps.CountDownNonScriptResources.check();
+                    });
+                }
+                //else if (r.ModuleType === 'import') {
+                //    Apps.CountDownResources.count++;
+                //    import(resourcesFolder + '/' + r.FileName)
+                //        .then((resource) => {
+                //            Apps.CountDownResources.check();
+                //        });
+                //}
+                //else if (r.ModuleType === 'require') {
+                //    Apps.CountDownResources.count++;
+                //    require([resourcesFolder + '/' + r.FileName], function (obj) {
+                //        Apps.CountDownResources.check();
+                //    });
+                //}
+                else if (r.ModuleType === 'script') {
+                    Apps.CountDownNonScriptResources.count++;
+                    Apps.LoadScript(resourcesFolder + '/' + r.FileName + '?version=' + Apps.Settings.Version, function () {
+                        Apps.CountDownNonScriptResources.check();
+                    });
+                }
+                //else if (r.ModuleType === 'style') {
+                //    Apps.CountDownNonScriptResources.count++;
+                //    Apps.LoadStyle(resourcesFolder + '/' + r.FileName + '?version=' + Apps.Settings.Version, function () {
+                //        Apps.CountDownNonScriptResources.check();
+                //    });
+                //}
             }
         });
 
-        Apps.ResourcesReady = callback;
+
     },
     LoadComponentsConfig: function (callback) {
 
@@ -192,12 +375,30 @@
 
         if (!Apps.Settings.UseServer) {
 
-            console.log('loading components: auto mode');
+            if (Apps.Settings.Debug)
+                console.log('loading components: auto mode');
 
-            Apps.Download(Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Components/components.json', function (response) {
+            Apps.Download(Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Components/components.js?version=' + Apps.Settings.Version, function (response) {
 
-                let components = JSON.parse(response);
+                var components = JSON.parse(response);
                 let componentsFolder = Apps.Settings.WebRoot + '/' + Apps.Settings.AppsRoot + '/Components';
+
+                if (Apps.ActiveDeployment.Test) {
+                    components.Components.push({
+                        "Name": "Testing",
+                        "Version": null,
+                        "Description": null,
+                        "ComponentFolder": null,
+                        "TemplateFolder": null,
+                        "Load": true,
+                        "Initialize": true,
+                        "Color": "blue",
+                        "ModuleType": "require",
+                        "Framework": "default",
+                        "Components": [],
+                        "IsOnDisk": false
+                    });
+                }
 
                 Apps.LoadComponents(null, components.Components, componentsFolder);
             });
@@ -208,31 +409,34 @@
 
         Apps.CountDownComponents.count++;
 
-        components.forEach(function (c, index) {
+        if (components) {
+            components.forEach(function (c, index) {
 
-            //if (c.Load && c.ModuleType === 'es6') {
+                //if (c.Load && c.ModuleType === 'es6') {
 
-            //    console.log('loading component: ' + c.Name + ' (via ' + c.ModuleType + ')');
-            //    Apps.CountDownComponents.count++;
-            //    import(componentUrl).then((cObj) => {
-            //        Apps.LoadComponent(parentComponent, cObj, c);
-            //        Apps.LoadComponents(cObj, c.Components, componentsFolder + '/' + c.Name + '/Components');
-            //        Apps.CountDownComponents.check();
-            //    });
-            //}
-            if (c.Load && c.ModuleType === 'require') {
+                //    console.log('loading component: ' + c.Name + ' (via ' + c.ModuleType + ')');
+                //    Apps.CountDownComponents.count++;
+                //    import(componentUrl).then((cObj) => {
+                //        Apps.LoadComponent(parentComponent, cObj, c);
+                //        Apps.LoadComponents(cObj, c.Components, componentsFolder + '/' + c.Name + '/Components');
+                //        Apps.CountDownComponents.check();
+                //    });
+                //}
+                if (c.Load && c.ModuleType === 'require') {
 
-                console.log('loading component: ' + c.Name + ' (via ' + c.ModuleType + ')');
+                    if (Apps.Settings.Debug)
+                        console.log('loading component: ' + c.Name + ' (via ' + c.ModuleType + ')');
 
-                Apps.CountDownComponents.count++;
-                require([componentsFolder + '/' + c.Name + '/' + c.Name + '.js?version=' + Apps.ActiveDeployment.Version], function (cObj) {
-                    Apps.LoadComponent(parentComponent, cObj, c);
-                    Apps.LoadComponents(cObj, c.Components, componentsFolder + '/' + c.Name + '/Components');
-                    Apps.CountDownComponents.check();
-                });
-            }
+                    Apps.CountDownComponents.count++;
+                    require([componentsFolder + '/' + c.Name + '/' + c.Name + '.js?version=' + Apps.Settings.Version], function (cObj) {
+                        Apps.LoadComponent(parentComponent, cObj, c);
+                        Apps.LoadComponents(cObj, c.Components, componentsFolder + '/' + c.Name); // + '/Components');
+                        Apps.CountDownComponents.check();
+                    });
+                }
 
-        });
+            });
+        }
         Apps.CountDownComponents.check();
     },
     LoadComponent: function (parentComponent, c, config) {
@@ -249,7 +453,8 @@
 
             if (config.Initialize) {
 
-                console.log('Initializing component ' + config.Name);
+                if (Apps.Settings.Debug)
+                    console.log('Initializing component ' + config.Name);
 
                 //if (Apps.Components[config.Name])
                 //    Apps.Components[config.Name].Initialize();
@@ -269,25 +474,26 @@
             }
         }
         else
-            console.log('Component ' + c.Name + ' not anything.');
+            if (Apps.Settings.Debug)
+                console.log('Component ' + c.Name + ' not anything.');
 
     },
     LoadStyle: function (filename, callback) {
         var fileref = document.createElement("link");
         fileref.setAttribute("rel", "stylesheet");
         fileref.setAttribute("type", "text/css");
-        fileref.setAttribute("href", filename + '?version=' + Apps.ActiveDeployment.Version);
+        fileref.setAttribute("href", filename + '?version=' + Apps.Settings.Version);
         document.getElementsByTagName("head")[0].appendChild(fileref);
 
-        if (callback)
+        if (callback) //Note: sync so no callback needed. Just thought you should know :)
             callback();
     },
     LoadTemplate: function (name, path, callback) {
 
         Apps.Download(path + '?version=' + Apps.ActiveDeployment.Version, function (data) {
 
-                Apps.UI[name] = new Apps.Template({ id: name, content: data });
-                Apps.UI[name].Load(data);
+            Apps.UI[name] = new Apps.Template({ id: name, content: data });
+            Apps.UI[name].Load(data);
 
             if (callback)
                 callback();
@@ -304,11 +510,94 @@
         //    }
         //});
     },
-    LoadScript: function (url, callback) {
-        var script = document.createElement('script');
-        script.src = url + '?version=' + Apps.ActiveDeployment.Version;
-        script.onload = callback;
-        document.head.appendChild(script);
+    LoadTemplateAndStyle: function (componentName, callback) {
+        let componentRoot = Apps.Settings.WebRoot + '/Scripts/Apps/Components/' + componentName + '/' + componentName;
+        Apps.LoadTemplate(componentName, componentRoot + '.html?ver=' + Apps.Settings.Version, function () {
+            Apps.LoadStyle(componentRoot + '.css?ver=' + Apps.Settings.Version);
+
+            if (callback)
+                callback();
+        });
+    },
+    //BindTemplate: function (templateId, argsArray) {
+    //    var content = $("#" + templateId).html();
+    //    if (argsArray) {
+    //        content = content.SearchAndReplace.apply(content, argsArray);
+    //    }
+    //    return content;
+    //},
+    //Drops all template tags contained in a given file on body (does not check for already loaded)
+    DropTemplateFile: function (path, callback) {
+        Apps.Download(path + '?version=' + Apps.ActiveDeployment.Version, function (content) {
+            //drop all templates in this file, if not already
+            $.each($(content), function (index, el) {
+                if (!document.getElementById(el.id)) {
+                    document.body.appendChild(el);
+                }
+            });
+            if (callback)
+                callback();
+        });
+    },
+    //Loads script-tagged template from disk (once) and applies data
+    BindTemplate: function (templateId, path, argsArray, callback) {
+        var content = '';
+
+        //Download if template not already dropped on page
+        if (!document.getElementById(templateId)) {
+
+            Apps.Download(path + '?version=' + Apps.ActiveDeployment.Version, function (content) {
+
+                //drop all templates in this file, if not already
+                $.each($(content), function (index, el) {
+                    if (!document.getElementById(el.id)) {
+                        document.body.appendChild(el);
+                    }
+                });
+
+                //get bound content for this particular template
+                content = $("#" + templateId).html();
+
+                if (argsArray) {
+                    content = content.SearchAndReplace.apply(content, argsArray);
+                    if (callback)
+                        callback(content);
+                }
+                else {
+                    if (callback)
+                        callback(content);
+                }
+
+            });
+        }
+        else {
+            //get bound content for this particular template
+            content = $("#" + templateId).html();
+
+            if (argsArray) {
+                content = content.SearchAndReplace.apply(content, argsArray);
+                if (callback)
+                    callback(content);
+            }
+            else {
+                if (callback)
+                    callback(content);
+            }
+
+        }
+    },
+    LoadScript: function (url, callback, fileNameId) {
+
+        if (!document.getElementById(fileNameId)) {
+            var script = document.createElement('script');
+            script.src = url + '?version=' + Apps.ActiveDeployment.Version;
+            if (fileNameId)
+                script.id = fileNameId;
+            script.onload = callback;
+            document.head.appendChild(script);
+        }
+        else
+            callback();
     },
     Download: function (path, callback) {
         var xhttp = new XMLHttpRequest();
@@ -334,6 +623,19 @@
                 Apps.ScriptResourcesReady();
         }
     },
+    CountDownNonScriptResources: {
+        count: 0,
+        check: function () {
+            this.count--;
+            if (this.count === 0) {
+                this.calculate();
+            }
+        },
+        calculate: function () {
+            if (Apps.NonScriptResourcesReady)
+                Apps.NonScriptResourcesReady();
+        }
+    },
     CountDownResources: {
         count: 0,
         check: function () {
@@ -357,19 +659,33 @@
         },
         calculate: function () {
 
-            if (Apps.ComponentsReady)
+            Apps.LocalComponentsReady();
+
+            if (Apps.ComponentsReady) {
+
                 Apps.ComponentsReady();
+
+                if (Apps.ActiveDeployment.Debug)
+                    Apps.Notify('warning', 'Debug configuration is enabled.');
+                if (Apps.ActiveDeployment.Test)
+                    Apps.Notify('warning', 'Test mode is enabled.');
+            }
         }
     },
-    Block: function () {
-        if ($.isFunction($.blockUI))
-            $.blockUI();
+    BlockUI: function (settings) {
+        if ($.isFunction($.blockUI)) {
+            if (settings) {
+                $.blockUI(settings);
+            }
+            else {
+                $.blockUI();
+            }
+        }
     },
-    UnBlock: function () {
+    UnBlockUI: function () {
         if ($.isFunction($.blockUI))
             $.unblockUI();
     },
-
     Notify: function (type, message, title, position) {
 
         //Example calls:
@@ -421,8 +737,8 @@
                 showClose: true
             };
 
-            var messageObject = title ? { text: message, title: title, position: vNotify.options.position } : { text: message, position:vNotify.options.position };
-            switch(type){
+            var messageObject = title ? { text: message, title: title, position: vNotify.options.position } : { text: message, position: vNotify.options.position };
+            switch (type) {
                 case 'info': vNotify.info(messageObject); break;
                 case 'success': vNotify.success(messageObject); break;
                 case 'warning': vNotify.warning(messageObject); break;
@@ -464,11 +780,111 @@
     Get: function (url, callback) {
         Apps.Ajax('GET', url, null, callback, false);
     },
+    Get2: function (url, callback) {
+        Apps.Ajax('GET', url, null, function (error, result) {
+            Apps.HandleAjaxResult(error, result, callback);
+        }, false);
+    },
     Put: function (url, callback, data) {
         Apps.Ajax('PUT', url, data, callback, false);
     },
     Post: function (url, dataString, callback) {
-        Apps.Ajax('POST', url, dataString, callback, false);
+        if (callback)
+            Apps.Ajax('POST', url, dataString, callback, false);
+    },
+    Post2: function (url, dataString, callback) {
+        Apps.Ajax('POST', url, dataString, function (error, result) {
+            Apps.HandleAjaxResult(error, result, callback);
+        }, false);
+    },
+    PostSync: function (url, dataString, callback) {
+        Apps.Ajax('POST', url, dataString, function (error, result) {
+            Apps.HandleAjaxResult(error, result, callback);
+        }, null, true);
+
+        //$.ajax({
+        //    type: 'POST',
+        //    url: url,
+        //    data: dataString,
+        //    contentType: 'application/json; charset=utf-8',
+        //    dataType: 'json',
+        //    async: false,
+        //    success: function (result) {
+        //        if (callback)
+        //            callback(false, result);
+        //    },
+        //    error: function (result) {
+        //        if (callback)
+        //            callback(true, result);
+        //    }
+        //});
+    },
+    WebService: function (wsUrl, data, callback) {
+        $.ajax({
+            type: 'POST',
+            url: wsUrl, //Apps.Settings.WebRoot + '/DriversLicenseWebService.asmx/ValidateDriversLicense',
+            data: data, // "{ driversLicense: '" + licenseNumber + "' }",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                Apps.HandleAjaxResult(false, data.d, callback);
+            },
+            error: function (data) {
+                Apps.HandleAjaxResult(true, data.d, callback);
+            }
+        });
+
+    },
+    WebServiceXML: function (path, callback) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                if (callback)
+                    callback(this.response);
+            }
+        };
+        xhttp.open('POST', path, true);
+        xhttp.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        xhttp.send();
+    },
+    HandleAjaxResult: function (error, result, callback) {
+        //Handle result
+        if (!error) {
+            if (result.Success) {
+                //Sunny day, all good
+                if (callback)
+                    callback(result);
+            }
+            else {
+
+                //Check if want to send a custom message along with failure
+                if (!result.ShowFailMessage) {
+                    Apps.Notify('warning', 'A problem happened while trying to do that. See the error dialog and/or logs for more information.');
+
+                    if (Apps.Settings.Debug) {
+                        Apps.Components.Common.Dialogs.Content('AppsErrorDialog', '<textarea style="width:100%; height:155px;">' + JSON.stringify(result) + '</textarea>');
+                        Apps.Components.Common.Dialogs.Open('AppsErrorDialog');
+                    }
+                }
+                else {
+                    Apps.Notify('warning', result.FailMessage);
+                }
+
+                if (callback)
+                    callback(result);
+            }
+        }
+        else {
+            Apps.Notify('warning', 'An exception happened during the last operation. See the error dialog and logs for more information.');
+
+            if (Apps.Settings.Debug) {
+                Apps.Components.Common.Dialogs.Content('AppsErrorDialog', JSON.stringify(result));
+                Apps.Components.Common.Dialogs.Open('AppsErrorDialog');
+            }
+
+            if (callback)
+                callback(result);
+        }
     },
     Auth: function (url, token, by, callback) {
         $.ajax({
@@ -478,7 +894,7 @@
             dataType: 'json',
             headers: {
                 'Authorization': 'Bearer ' + token,
-                'by' : by
+                'by': by
             }
         }).done(function () {
             //console.log('PUT success.');
@@ -512,15 +928,50 @@
             },
             async: !sync,
             success: function (result) {
-                if (callback !== null)
+                if (callback)
                     callback(false, result, successCallback);
             },
             error: function (result) {
-                if (callback !== null)
+                if (callback)
                     callback(true, result);
             }
         });
 
+    },
+    SetPolyfills: function () {
+        if (!Object.keys) {
+            Object.keys = (function () {
+                var hasOwnProperty = Object.prototype.hasOwnProperty,
+                    hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString'),
+                    dontEnums = [
+                        'toString',
+                        'toLocaleString',
+                        'valueOf',
+                        'hasOwnProperty',
+                        'isPrototypeOf',
+                        'propertyIsEnumerable',
+                        'constructor'
+                    ],
+                    dontEnumsLength = dontEnums.length;
+
+                return function (obj) {
+                    if (typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object');
+
+                    var result = [];
+
+                    for (var prop in obj) {
+                        if (hasOwnProperty.call(obj, prop)) result.push(prop);
+                    }
+
+                    if (hasDontEnumBug) {
+                        for (var i = 0; i < dontEnumsLength; i++) {
+                            if (hasOwnProperty.call(obj, dontEnums[i])) result.push(dontEnums[i]);
+                        }
+                    }
+                    return result;
+                };
+            })();
+        }
     }
 
 };
@@ -529,7 +980,7 @@ Apps.Template = function (settings) {
 
     this.TemplateID = settings.id; // templateId;
     //this.Selector = $("#" + this.TemplateID);
-   
+
     //this.Selector.html(settings.data);
     this.Load = function (content) {
 
@@ -553,16 +1004,16 @@ Apps.Template = function (settings) {
 
     this.Drop = function (argsArray) {
         //Get template html and drop to dom and reload selector
-       // var content = Apps.Util.DropTemplate(this.TemplateID);
+        // var content = Apps.Util.DropTemplate(this.TemplateID);
         if (!document.getElementById('content' + this.TemplateID)) {
 
-        this.Selector = document.getElementById(this.TemplateID);
+            this.Selector = document.getElementById(this.TemplateID);
 
-        //Gets html from template and puts inside container div (exposing it)
-        var content = this.Template.innerHTML; // this.Selector.find('div').html();
+            //Gets html from template and puts inside container div (exposing it)
+            var content = this.Template.innerHTML; // this.Selector.find('div').html();
 
-        if (argsArray)
-            content = content.SearchAndReplace.apply(content, argsArray);
+            if (argsArray)
+                content = content.SearchAndReplace.apply(content, argsArray);
 
 
             let contentDiv = document.createElement('div');
@@ -570,14 +1021,14 @@ Apps.Template = function (settings) {
             contentDiv.classList = this.TemplateID + 'ContentStyle';
             contentDiv.innerHTML = content;
 
-            this.Selector.append(contentDiv);
+            this.Selector.appendChild(contentDiv);
         }
-            
 
-       // if($(content).length === 0)
-       // if ($('#' + $(content)[0].id).length === 0)
+
+        // if($(content).length === 0)
+        // if ($('#' + $(content)[0].id).length === 0)
         //    this.Selector.append(content);
-         //   //this.Selector.append(content);
+        //   //this.Selector.append(content);
 
         return this;
     };
@@ -587,10 +1038,10 @@ Apps.Template = function (settings) {
         //this.Selector = $(this.TemplateID);
 
         //if (this.Selector.length === 0)
-            this.Drop(); //Drops the inner template content
+        this.Drop(); //Drops the inner template content
 
-       // this.Selector.style.opacity = 0;
-        if(this.Selector)
+        // this.Selector.style.opacity = 0;
+        if (this.Selector)
             this.Selector.style.display = 'block';
 
 

@@ -67,110 +67,33 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Images\22.gif" />
-    <Content Include="Images\delegate.jpg" />
-    <Content Include="Images\logo.png" />
-    <Content Include="Images\logo_with_title.png" />
-    <Content Include="index.html" />
-    <Content Include="jquery.js" />
+    <Content Include="favicon.ico" />
     <Content Include="Scripts\Apps\Apps.js" />
-    <Content Include="Scripts\Apps\Components\Debug\debug.css" />
-    <Content Include="Scripts\Apps\Components\Debug\debug.html" />
-    <Content Include="Scripts\Apps\Components\Debug\debug.js" />
-    <Content Include="Scripts\Apps\Components\Login\Images\22.gif" />
-    <Content Include="Scripts\Apps\Components\Login\Images\delegate.jpg" />
-    <Content Include="Scripts\Apps\Components\Login\Images\logo.png" />
-    <Content Include="Scripts\Apps\Components\Login\Images\logo_with_title.png" />
-    <Content Include="Scripts\Apps\Components\Login\Login.css" />
-    <Content Include="Scripts\Apps\Components\Login\Login.html" />
-    <Content Include="Scripts\Apps\Components\Login\Login.js" />
+    <Content Include="Scripts\Apps\Components\Main\Login\Login.css" />
+    <Content Include="Scripts\Apps\Components\Main\Login\Login.html" />
+    <Content Include="Scripts\Apps\Components\Main\Login\Login.js" />
+    <Content Include="Scripts\Apps\Components\Main\Main.js" />
     <Content Include="Scripts\Apps\index.html" />
-    <Content Include="Scripts\Apps\jquery.js" />
+    <Content Include="Scripts\Apps\Resources\bind.js" />
     <Content Include="Scripts\Apps\Resources\bootstrap4.min.css" />
     <Content Include="Scripts\Apps\Resources\bootstrap4withpopper.js" />
-    <Content Include="Scripts\Apps\Resources\defaultGridStyle.css" />
+    <Content Include="Scripts\Apps\Resources\dialog.js" />
     <Content Include="Scripts\Apps\Resources\grid.js" />
     <Content Include="Scripts\Apps\Resources\jquery.js" />
-    <Content Include="Scripts\Apps\Resources\linq.js" />
     <Content Include="Scripts\Apps\Resources\QueryString_es5.js" />
-    <Content Include="Scripts\Apps\Resources\QueryString_es6.js" />
     <Content Include="Scripts\Apps\Resources\require.js" />
     <Content Include="Scripts\Apps\Resources\util.js" />
     <Content Include="Scripts\Apps\Resources\vanilla-notify.css" />
     <Content Include="Scripts\Apps\Resources\vanilla-notify.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Apps.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Debug\debug.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Debug\debug.html" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Debug\debug.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\app.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\bind.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Dialog\css\sampleDialogStyle.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Dialog\dialog.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Dialog\modules\dialog_helpers.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Dialog\modules\util.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Grid\defaultGridStyle.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Grid\grid.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Tabstrip\css\tabstrip.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Tabstrip\modules\util.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Tabstrip\tabstrip.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\Tabstrip\templates\temp.html" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\templates.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\Modules\util.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\animate.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\bootstrap-datetimepicker.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\bootstrap-datetimepicker.min.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\bootstrap-notify.min.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\bootstrap.min.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\bootstrap.min.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\bootstrap4.min.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\bootstrap4.min.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\flatpickr.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\flatpickr.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\funcunit.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\jquery-3.1.0.min.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\jquery-3.1.1.min.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\jquery-te-1.4.0.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\jquery-te-1.4.0.min.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\jquery-te.png" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\jquery.blockUI.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\jquery.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\linq.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\micro-enum.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\moment.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\notify.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\notify.min.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\popper.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\require.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Apps1.x\References\tooltip.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\CLI\AppsCLI.dll" />
-    <Content Include="Scripts\Apps\_AppsIgnore\CLI\AppsCLI.pdb" />
-    <Content Include="Scripts\Apps\_AppsIgnore\CLI\Newtonsoft.Json.dll" />
-    <Content Include="Scripts\Apps\_AppsIgnore\StripeTest\client\canceled.html" />
-    <Content Include="Scripts\Apps\_AppsIgnore\StripeTest\client\css\global.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\StripeTest\client\css\normalize.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\StripeTest\client\favicon.ico" />
-    <Content Include="Scripts\Apps\_AppsIgnore\StripeTest\client\grid.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\StripeTest\client\index.html" />
-    <Content Include="Scripts\Apps\_AppsIgnore\StripeTest\client\jquery.js" />
-    <Content Include="Scripts\Apps\_AppsIgnore\StripeTest\client\success.html" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Templates\empty.css" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Templates\empty.html" />
-    <Content Include="Scripts\Apps\_AppsIgnore\Templates\empty.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="libman.json" />
     <None Include="packages.config" />
-    <Content Include="Scripts\Apps\AppsDeployments.json" />
-    <Content Include="Scripts\Apps\Components\components.json" />
-    <Content Include="Scripts\Apps\_AppsIgnore\CLI\AppsCLI.deps.json" />
-    <Content Include="Scripts\Apps\_AppsIgnore\CLI\AppsCLI.runtimeconfig.json" />
-    <Content Include="Scripts\Apps\_AppsIgnore\CLI\config.json" />
-    <Content Include="Scripts\Apps\_AppsIgnore\CLI\refresh_components.bat" />
-    <Content Include="Scripts\Apps\Resources\resources.json" />
+    <Content Include="Scripts\Apps\Components\components.js" />
+    <Content Include="Scripts\Apps\Resources\resources.js" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -178,6 +101,7 @@
       <DependentUpon>Web.config</DependentUpon>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

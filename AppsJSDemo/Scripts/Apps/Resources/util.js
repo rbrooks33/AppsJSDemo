@@ -68,6 +68,14 @@
             };
 
         },
+        Values: function (obj) {
+            //var obj = { foo: 'bar', baz: 42 };
+            var result = null;
+            var values = Object.keys(obj).map(function (e) {
+                result = obj[e]; //return obj[e]
+            });
+            return result;
+        },
         //Specify
         //1.) HTML file that contains template
         //2.) Template ID inside the file. ID will be then  be available in DOM.
@@ -155,8 +163,17 @@
         //var content = GetHTML('templateConditions', [index, conditionId, conditionName, "My Title"]);
         GetHTML: function (templateId, argsArray) {
             var content = $("#" + templateId).html();
+            if (content === undefined) {
+                content = window.parent.$("#" + templateId).html();
+                if (content === undefined) {
+                    content = window.parent.parent.$("#" + templateId).html();
+                }
+            }
             if (argsArray) {
-                content = content.SearchAndReplace.apply(content, argsArray);
+                if (content)
+                    content = content.SearchAndReplace.apply(content, argsArray);
+                else
+                    console.warn('GetHTML content is empty although args exist. Template: ' + templateId);
             }
             return content; 
         },
@@ -387,6 +404,26 @@
             //if (clickcallback)
             //    clickcallback() //$(document).on("change", "#" + cboID, clickcallback);
         },
+        RefreshCombobox3: function (collection, cboID, selectedValue, selectText, idFieldName, textFieldName, clickcallback) {
+            $('#' + cboID).empty();
+
+            $("<option value='-1'>" + selectText + "</option>").appendTo($('#' + cboID));
+
+            $.each(collection, function (index, rtr) {
+
+                var id = eval("rtr[0]." + idFieldName);
+                var name = eval("rtr[0]." + textFieldName);
+
+                var option = $("<option value='" + id + "'>" + name + "</option>").appendTo($('#' + cboID));
+
+                if (id === selectedValue) {
+                    $(option).prop('selected', 'true');
+                }
+            });
+
+            if (clickcallback)
+                $(document).on("change", "#" + cboID, clickcallback);
+        },
 
         GetQueryString: function () {
             var qs_vars = [], hash;
@@ -407,9 +444,19 @@
         IsInt: function (value) {
             return !isNaN(value) && (function (x) { return (x | 0) === x; })(parseFloat(value));
         },
-
+        IsDate: function (d) {
+            //return typeof d.getMonth === 'function';
+            return d instanceof Date && !isNaN(d);
+        },
         IsNumber: function (value) {
-            return !isNaN(Number(value));
+            if (value === '')
+                return false;
+            else
+                return !isNaN(Number(value));
+        },
+        IsAlpha: function (ch) {
+            return typeof ch === "string" && ch.length === 1
+                && (ch >= "a" && ch <= "z" || ch >= "A" && ch <= "Z");
         },
         IsNormalInteger: function (str) {
             var n = Math.floor(Number(str));
@@ -500,6 +547,26 @@
             }
             return result;
         },
+        FormatPaddedDate: function (date) {
+            var result = "";
+
+            var dd = date.getDate();
+            var mm = date.getMonth() + 1; //January is 0!
+            var yyyy = date.getFullYear();
+
+            if (dd < 10) {
+                dd = '0' + dd
+            }
+
+            if (mm < 10) {
+                mm = '0' + mm
+            }
+
+            result = mm + '/' + dd + '/' + yyyy;
+
+            return result;
+        },
+
         FormatDateTime2: function (dateString) {
             //2015-10-14T08:12:15.3829654-07:00
             //2015-10-14T8:18:28.893-7:00
@@ -552,6 +619,47 @@
                 return date.getUTCFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
             else
                 return "";
+        },
+        FormatMoney: function (total) {
+            var neg = false;
+            if (total < 0) {
+                neg = true;
+                total = Math.abs(total);
+            }
+            return (neg ? "-$" : '$') + parseFloat(total, 10).toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString();
+        },
+        Ticks: ((new Date().getTime() * 10000) + 621355968000000000),
+        TimeSince: function(date) {
+
+                var seconds = Math.floor((new Date() - date) / 1000);
+
+                var interval = Math.floor(seconds / 31536000);
+
+                if (interval > 1) {
+                    return interval + " years";
+                }
+                interval = Math.floor(seconds / 2592000);
+                if (interval > 1) {
+                    return interval + " months";
+                }
+                interval = Math.floor(seconds / 86400);
+                if (interval > 1) {
+                    return interval + " days";
+                }
+                interval = Math.floor(seconds / 3600);
+                if (interval > 1) {
+                    return interval + " hours";
+                }
+                interval = Math.floor(seconds / 60);
+                if (interval > 1) {
+                    return interval + " minutes";
+                }
+                return Math.floor(seconds) + " seconds";
+            
+            //var aDay = 24 * 60 * 60 * 1000;
+            //console.log(timeSince(new Date(Date.now() - aDay)));
+            //console.log(timeSince(new Date(Date.now() - aDay * 2)));
+            
         },
         Middle: function (selector)
         {
